@@ -1,0 +1,108 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  VENDEDOR
+}
+
+enum Viabilidade {
+  NENHUMA
+  PROVAVEL
+  CONFIRMADA
+  PREDIO_CABEADO
+}
+
+enum FonteViabilidade {
+  CONDOMINIO
+  IHS
+  VTAL
+  OUTRA
+}
+
+model Usuario {
+  id        Int      @id @default(autoincrement())
+  nome      String
+  email     String   @unique
+  senhaHash String
+  role      Role     @default(VENDEDOR)
+  ativo     Boolean  @default(true)
+  criadoEm  DateTime @default(now())
+
+  extracoes Extracao[]
+  leads     Empresa[]  @relation("LeadsAtribuidos")
+}
+
+model Config {
+  chave String @id
+  valor String
+}
+
+// Base de CNPJs da Receita Federal (Modulo 2 popula)
+model Empresa {
+  cnpj          String      @id
+  cnpjBasico    String?
+  razaoSocial   String
+  nomeFantasia  String?
+  cnae          String?
+  cnaeDescricao String?
+  uf            String
+  municipio     String
+  bairro        String?
+  cep           String?
+  logradouro    String?
+  numero        String?
+  telefone1     String?
+  telefone2     String?
+  email         String?
+  porte         String?
+  mei           Boolean     @default(false)
+  situacao      String?
+  dataAbertura  String?
+  viabilidade   Viabilidade @default(NENHUMA)
+
+  atribuidoAId Int?
+  atribuidoA   Usuario?  @relation("LeadsAtribuidos", fields: [atribuidoAId], references: [id])
+  atribuidoEm  DateTime?
+
+  @@index([uf, municipio])
+  @@index([cnpjBasico])
+  @@index([cep])
+  @@index([cnae])
+  @@index([viabilidade])
+  @@index([atribuidoAId])
+}
+
+// Enderecos com viabilidade de fibra (Modulo 3 popula via CSVs)
+model ViabilidadeEndereco {
+  id         Int              @id @default(autoincrement())
+  fonte      FonteViabilidade
+  uf         String
+  cidade     String
+  bairro     String?
+  cep        String
+  logradouro String?
+  numero     String?
+  status     String?
+  criadoEm   DateTime         @default(now())
+
+  @@index([cep])
+  @@index([cep, numero])
+}
+
+model Extracao {
+  id         Int      @id @default(autoincrement())
+  usuarioId  Int
+  usuario    Usuario  @relation(fields: [usuarioId], references: [id])
+  quantidade Int
+  filtros    Json
+  criadoEm   DateTime @default(now())
+
+  @@index([usuarioId])
+}

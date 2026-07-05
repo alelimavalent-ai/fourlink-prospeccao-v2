@@ -1,103 +1,63 @@
-# 🚀 Fourlink — Máquina de Prospecção B2B
+# Fourlink Prospector — Módulos 1 e 2
 
-Dashboard de prospecção B2B para a **Fourlink Telecom** (parceira TIM Empresas, MG/RJ/ES).
+Sistema interno de prospecção B2B da Fourlink Telecom (RJ · MG · ES).
 
----
-
-## ⚡ Rodar localmente
-
-### Pré-requisitos
-- Node.js 18+ instalado ([nodejs.org](https://nodejs.org))
-
-### Passos
-
-```bash
-# 1. Instalar dependências
-npm install
-
-# 2. Iniciar servidor de desenvolvimento
-npm run dev
-```
-
-Abra http://localhost:5173 no navegador.
+**Módulo 1 entregue:** estrutura do projeto, banco PostgreSQL, login multiusuário (Admin/Vendedor), gestão de usuários, limite de extração configurável e painel inicial.
 
 ---
 
-## 🌐 Deploy na Vercel (gratuito)
+## 🚀 Como colocar no ar (Railway) — passo a passo
 
-### Opção 1 — Via GitHub (recomendado)
+### 1. Suba o projeto no GitHub
+1. Acesse github.com e crie um repositório novo chamado `fourlink-prospector` (privado).
+2. Envie todos os arquivos desta pasta para o repositório (pode arrastar pelo site do GitHub: "uploading an existing file").
 
-1. Faça upload desta pasta para um repositório GitHub (público ou privado)
-2. Acesse [vercel.com](https://vercel.com) e clique em **Add New Project**
-3. Importe o repositório
-4. Configurações automáticas:
-   - **Framework:** Vite
-   - **Build Command:** `npm run build`
-   - **Output Directory:** `dist`
-5. Clique em **Deploy** ✅
+### 2. Crie o projeto na Railway
+1. Acesse **railway.app** e entre com sua conta do GitHub.
+2. Clique em **New Project → Deploy from GitHub repo** e escolha `fourlink-prospector`.
+3. No projeto, clique em **+ New → Database → PostgreSQL** (a Railway cria o banco sozinha).
 
-### Opção 2 — Via Vercel CLI
-
-```bash
-# Instalar Vercel CLI
-npm install -g vercel
-
-# Na pasta do projeto:
-vercel
-
-# Seguir as instruções no terminal
-# Na primeira vez: vercel --prod para publicar em produção
-```
-
----
-
-## 📁 Estrutura do projeto
-
-```
-fourlink-prospeccao/
-├── index.html              # HTML raiz
-├── vite.config.js          # Config Vite
-├── tailwind.config.js      # Config Tailwind CSS
-├── postcss.config.js       # PostCSS
-├── vercel.json             # Config deploy Vercel (SPA routing)
-├── package.json
-└── src/
-    ├── main.jsx            # Entry point React
-    ├── App.jsx             # Componente raiz + estado global
-    ├── index.css           # Estilos globais + Tailwind
-    ├── data.js             # Dados, constantes, prospects iniciais
-    ├── scripts.js          # Scripts CRM por nicho
-    └── components/
-        ├── Dashboard.jsx       # Tab Dashboard (KPIs, pipeline, top5)
-        ├── ProspectsTable.jsx  # Tab Prospects (filtros + tabela)
-        ├── ProspectModal.jsx   # Modal edição/cadastro + Script CRM
-        ├── NichoCard.jsx       # Card distribuição por nicho
-        ├── ScoreBadge.jsx      # Badge colorido de score
-        └── Toast.jsx           # Notificação temporária
-```
-
----
-
-## ✨ Funcionalidades
-
-| Feature | Descrição |
+### 3. Configure as variáveis (aba Variables do serviço web)
+| Variável | Valor |
 |---|---|
-| 📊 Dashboard | KPIs, distribuição por nicho, pipeline e top 5 |
-| 🎯 Prospects | Tabela com busca, filtros e ordenação |
-| ➕ Novo Prospect | Cadastro completo com todos os campos |
-| ✏️ Editar | Clique em qualquer linha para editar |
-| 🗑️ Deletar | Remove prospect com confirmação via toast |
-| 📤 Exportar CSV | Exporta lista filtrada para Excel |
-| 📲 Script CRM | WhatsApp + e-mail por nicho, com botão Copiar |
+| `DATABASE_URL` | clique em "Add Reference" e escolha a do PostgreSQL |
+| `JWT_SECRET` | qualquer frase longa e secreta (ex: gerada em 1password) |
+| `ADMIN_SENHA_INICIAL` | senha inicial dos admins (opcional; padrão Fourlink@2026!) |
+
+### 4. Deploy
+A Railway detecta o Node e roda tudo sozinha: instala, builda o painel e sobe o servidor.
+Quando aparecer "Fourlink Prospector rodando", clique em **Settings → Generate Domain** para ter a URL de acesso.
+
+### 5. Domínio próprio (opcional)
+Em Settings → Custom Domain, adicione `prospector.fourlinkempresas.com` e crie o CNAME no Cloudflare apontando para o endereço que a Railway mostrar.
 
 ---
 
-## 🎨 Personalização
+## 🔑 Primeiro acesso
+- **valentim@fourlinkempresas.com.br** / senha inicial
+- **lene@fourlinkempresas.com.br** / senha inicial
 
-Para trocar os dados de exemplo, edite `src/data.js` → array `INITIAL_PROSPECTS`.
+⚠️ Troquem a senha no primeiro login (menu Configurações → Trocar minha senha).
 
-Para adicionar/editar scripts CRM, edite `src/scripts.js`.
+Depois, criem os vendedores em **Usuários** (nível Vendedor).
 
 ---
 
-**Fourlink Telecom** · contato@fourlinktim.com.br · (21) 98768-1233
+## 📦 Estrutura
+- `backend/` — API Node/Express + Prisma (PostgreSQL)
+- `frontend/` — Painel React/Vite (identidade navy + vermelho Fourlink)
+- Login JWT com validade de 12h · Usuários Admin e Vendedor
+- Banco já preparado para os próximos módulos (empresas da Receita, viabilidade, extrações)
+
+## 📥 Módulo 2 — Importador da Receita Federal
+- Menu **Base de Dados** (só admins): botão "Atualizar base agora" + progresso em tempo real
+- Baixa os dados abertos oficiais do CNPJ, filtra **RJ, MG e ES** e importa **só empresas ATIVAS**
+- Traz: razão social, nome fantasia, CNAE, endereço completo, CEP, telefones, e-mail, porte e MEI
+- Se o servidor reiniciar no meio, a importação **retoma de onde parou**
+- Depois da 1ª importação, o sistema se atualiza sozinho todo mês (desligue com a variável `AUTO_IMPORT=false`)
+- A 1ª importação completa pode levar algumas horas — acompanhe pela tela, ou feche e volte depois
+
+## 🗺️ Próximos módulos
+3. Importador das 4 bases de viabilidade + cruzamento por CEP e número
+4. Tela de Prospecção: filtros, atribuição de leads, exportação Excel e botão WhatsApp
+5. Extras: histórico por vendedor e integração WhatsApp via whatsmeow (QR Code)
